@@ -1,0 +1,65 @@
+#include <DHT.h>;
+#include <AntaresESP8266HTTP.h>;
+
+//variable dht
+#define DHT_PIN 5 //pin D1
+#define DHTTYPE DHT22
+
+//variable untuk akses ke antares
+#define ACCESSKEY "6bdfce96752d5ec4:0521e05b640aa5b5"
+#define projectName "Monitoring_DHT22"
+#define deviceName "Monitoring_DHT22"
+
+//variable wifi
+#define WIFISSID "LAB HARDWARE 1"
+#define PASSWORD "prodikom 123"
+#define LED_PIN 4 // PIN2
+
+//buat variable untuk sensor dht
+DHT dht(DHT_PIN, DHTTYPE);
+//sediakan objek
+AntaresESP8266HTTP antares (ACCESSKEY);
+
+
+void setup () {
+ //aktifkan serial
+ Serial.begin (115200);
+ //aktifkan sensor dht
+ dht.begin();
+ //mode LeD
+ pinMode (LED_PIN, OUTPUT);
+ 
+
+  //koneksi ke wifi
+  WiFi.begin (WIFISSID, PASSWORD);
+  //pengecekan koneksi wifi
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    //led off
+    digitalWrite(LED_PIN, LOW);
+  }
+    //lampu led on
+    digitalWrite(LED_PIN, HIGH);
+
+  //koneksi antares
+  antares.setDebug(true);// menampilkan informasi data yg terkirim
+  antares.wifiConnection(WIFISSID, PASSWORD);
+
+}
+
+void loop () {
+  
+  //baca nilai humidity dan temperature
+  float temp =  dht.readHumidity();
+  float hum = dht.readTemperature();
+  
+//buat variable penampung data yg dikirim
+antares.add("Temperature", temp);
+antares.add("Humidit", hum);
+
+//kirim data
+antares.send(projectName, deviceName);
+
+delay(5000);
+}
